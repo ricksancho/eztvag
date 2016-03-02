@@ -39,9 +39,12 @@ func TestParseResultShow2(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	torrents, err := parseResultShow(root)
+	torrents, imdbId, err := parseResultShow(root)
 	if err != nil {
 		t.Error(err)
+	}
+	if imdbId != "tt0182576" {
+		t.Errorf("expected %q get %q", "tt0182576", imdbId)
 	}
 	if len(torrents) != 100 {
 		t.Errorf("expected 28 torrents get %d", len(torrents))
@@ -59,13 +62,17 @@ func TestParseResultShow(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	torrents, err := parseResultShow(root)
+	torrents, imdbId, err := parseResultShow(root)
 	if err != nil {
 		t.Error(err)
 	}
 	if len(torrents) != 28 {
 		t.Errorf("expected 28 torrents get %d", len(torrents))
 	}
+	if imdbId != "tt3032476" {
+		t.Errorf("expected %q get %q", "tt3032476", imdbId)
+	}
+
 	tr := torrents[0]
 	if tr.Name != "Better Call Saul S02E02 HDTV x264-KILLERS" {
 		t.Errorf("expected name \"Better Call Saul S02E02 HDTV x264-KILLERS\" get %q",

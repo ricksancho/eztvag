@@ -31,6 +31,7 @@ type Tvshow struct {
 	Status string
 	Rating string
 	URL    string
+	ImdbId string
 }
 
 // Client represents the kickass client
@@ -106,9 +107,10 @@ func (c *Client) GetTvShow(name string) ([]*Torrent, error) {
 	if err != nil {
 		return nil, err
 	}
-	torrents, err := parseResultShow(root)
+	torrents, imdbId, err := parseResultShow(root)
 	if err != nil {
 		return nil, err
 	}
+	guessTvshow.ImdbId = imdbId
 	return torrents, nil
 }

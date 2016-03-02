@@ -13,6 +13,7 @@ var (
 	xpathShowlistRating  = xmlpath.MustCompile(".//td[3]")
 	xpathShowlistURL     = xmlpath.MustCompile(".//a[@class=\"thread_link\"]/@href")
 
+	xpathShowLinkImdb   = xmlpath.MustCompile("//a[contains(@href, \"imdb.com/title/tt\")]/@href")
 	xpathShowResults    = xmlpath.MustCompile("//tr[@name=\"hover\"]")
 	xpathShowName       = xmlpath.MustCompile(".//a[@class=\"epinfo\"]")
 	xpathShowMagnetURL  = xmlpath.MustCompile(".//a[@class=\"magnet\"]/@href")
@@ -21,14 +22,22 @@ var (
 	xpathShowSize       = xmlpath.MustCompile(".//td[4]")
 )
 
-func parseResultShow(root *xmlpath.Node) ([]*Torrent, error) {
+func parseResultShow(root *xmlpath.Node) ([]*Torrent, string, error) {
 	torrents := []*Torrent{}
+
+	linkImdb, ok := xpathShowLinkImdb.String(root)
+	var imdbId string
+	if ok {
+		linkImdb = strings.TrimRight(linkImdb, "/")
+		pos := strings.LastIndex(linkImdb, "/") + 1
+		imdbId = linkImdb[pos:]
+	}
 
 	iter := xpathShowResults.Iter(root)
 	for iter.Next() {
 		name, ok := xpathShowName.String(iter.Node())
 		if !ok {
-			return nil, ErrUnexpectedContent
+			return nil, imdbId, ErrUnexpectedContent
 		}
 
 		magnetURL, ok := xpathShowMagnetURL.String(iter.Node())
@@ -42,11 +51,11 @@ func parseResultShow(root *xmlpath.Node) ([]*Torrent, error) {
 
 		age, ok := xpathShowAge.String(iter.Node())
 		if !ok {
-			return nil, ErrUnexpectedContent
+			return nil, imdbId, ErrUnexpectedContent
 		}
 		size, ok := xpathShowSize.String(iter.Node())
 		if !ok {
-			return nil, ErrUnexpectedContent
+			return nil, imdbId, ErrUnexpectedContent
 		}
 		t := &Torrent{
 			Name:       name,
@@ -57,7 +66,7 @@ func parseResultShow(root *xmlpath.Node) ([]*Torrent, error) {
 		}
 		torrents = append(torrents, t)
 	}
-	return torrents, nil
+	return torrents, imdbId, nil
 }
 
 func parseResultShowlist(root *xmlpath.Node) ([]*Tvshow, error) {
