@@ -6,6 +6,7 @@ import (
 	"github.com/arbovm/levenshtein"
 	_ "github.com/kr/pretty"
 	"gopkg.in/xmlpath.v2"
+	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -19,19 +20,33 @@ var (
 )
 
 type Torrent struct {
-	Name       string
-	TorrentURL string
-	MagnetURL  string
-	Size       string
-	Age        string
+	Name            string
+	InfoHash        string
+	TorrentURL      string
+	MagnetURL       string
+	Size            int64
+	Age             string
+	EpisodeURL      string
+	ShowImdbId      string
+	ShowTvmazeId    string
+	Seeds           int
+	Peers           int
+	Season          string
+	Episode         string
+	PubDate         string
+	Filename        string
+	FileFormat      string
+	FileResolution  string
+	FileAspectRatio string
 }
 
 type Tvshow struct {
-	Name   string
-	Status string
-	Rating string
-	URL    string
-	ImdbId string
+	Name     string
+	Status   string
+	Rating   string
+	URL      string
+	ImdbId   string
+	TvmazeId string
 }
 
 // Client represents the kickass client
@@ -107,10 +122,29 @@ func (c *Client) GetTvShow(name string) ([]*Torrent, error) {
 	if err != nil {
 		return nil, err
 	}
-	torrents, imdbId, err := parseResultShow(root)
+	torrents, imdbId, mazeId, err := parseResultShow(root)
 	if err != nil {
 		return nil, err
 	}
 	guessTvshow.ImdbId = imdbId
+	guessTvshow.TvmazeId = mazeId
+
+	for _, t := range torrents {
+		URL = c.Endpoint + t.EpisodeURL
+		resp, err := c.HTTPClient.Get(URL)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			return nil, ErrNetworkRequest
+		}
+		content, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		parseResultTorrent(string(content), t)
+	}
+
 	return torrents, nil
 }

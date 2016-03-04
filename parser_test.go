@@ -1,10 +1,43 @@
 package eztvag
 
 import (
+	_ "fmt"
+	"github.com/kr/pretty"
 	"gopkg.in/xmlpath.v2"
+	"io/ioutil"
 	"os"
 	"testing"
 )
+
+func TestParseResultTorrent2(t *testing.T) {
+	f, err := os.Open("test/torrent2.test")
+	if err != nil {
+		t.Error(err)
+	}
+	defer f.Close()
+	content, err := ioutil.ReadAll(f)
+	if err != nil {
+		t.Error(err)
+	}
+	torrent := &Torrent{}
+	parseResultTorrent(string(content), torrent)
+	pretty.Println(torrent)
+}
+
+func TestParseResultTorrent(t *testing.T) {
+	f, err := os.Open("test/torrent.test")
+	if err != nil {
+		t.Error(err)
+	}
+	defer f.Close()
+	content, err := ioutil.ReadAll(f)
+	if err != nil {
+		t.Error(err)
+	}
+	torrent := &Torrent{}
+	parseResultTorrent(string(content), torrent)
+	pretty.Println(torrent)
+}
 
 func TestParseResultShowList(t *testing.T) {
 	f, err := os.Open("test/showlist.test")
@@ -39,7 +72,7 @@ func TestParseResultShow2(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	torrents, imdbId, err := parseResultShow(root)
+	torrents, imdbId, _, err := parseResultShow(root)
 	if err != nil {
 		t.Error(err)
 	}
@@ -49,6 +82,7 @@ func TestParseResultShow2(t *testing.T) {
 	if len(torrents) != 100 {
 		t.Errorf("expected 28 torrents get %d", len(torrents))
 	}
+	pretty.Println(torrents)
 }
 
 func TestParseResultShow(t *testing.T) {
@@ -62,7 +96,7 @@ func TestParseResultShow(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	torrents, imdbId, err := parseResultShow(root)
+	torrents, imdbId, _, err := parseResultShow(root)
 	if err != nil {
 		t.Error(err)
 	}
@@ -78,8 +112,8 @@ func TestParseResultShow(t *testing.T) {
 		t.Errorf("expected name \"Better Call Saul S02E02 HDTV x264-KILLERS\" get %q",
 			tr.Name)
 	}
-	if tr.Size != "233.76 MB" {
-		t.Errorf("excepted size \"233.76 MB\" get %q", tr.Size)
+	if tr.Size != 245115125 {
+		t.Errorf("excepted size %f get %f", 245115125, tr.Size)
 	}
 	if tr.Age != "6d 18h" {
 		t.Errorf("excepted age \"6d 18h\" get %q", tr.Age)
